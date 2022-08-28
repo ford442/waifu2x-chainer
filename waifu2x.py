@@ -7,13 +7,14 @@ import chainer
 import numpy as np
 from PIL import Image
 import six
-
 from lib import iproc
 from lib import reconstruct
 from lib import srcnn
 from lib import utils
+from functools import lru_cache;
+from methodtools import lru_cache as class_cache;
 
-
+@lru_cache(maxsize=40)
 def denoise_image(cfg, src, model):
     dst, alpha = split_alpha(src, model)
     six.print_('Level {} denoising...'.format(cfg.noise_level),
@@ -30,7 +31,7 @@ def denoise_image(cfg, src, model):
         dst.putalpha(alpha)
     return dst
 
-
+@lru_cache(maxsize=40)
 def upscale_image(cfg, src, scale_model, alpha_model=None):
     dst, alpha = split_alpha(src, scale_model)
     for i in range(int(np.ceil(np.log2(cfg.scale_ratio)))):
@@ -63,7 +64,7 @@ def upscale_image(cfg, src, scale_model, alpha_model=None):
         dst.putalpha(alpha)
     return dst
 
-
+@lru_cache(maxsize=40)
 def split_alpha(src, model):
     alpha = None
     if src.mode in ('L', 'RGB', 'P'):
@@ -77,14 +78,12 @@ def split_alpha(src, model):
         six.print_('OK')
     return rgb, alpha
 
-
 def load_models(cfg):
     ch = 3 if cfg.color == 'rgb' else 1
     if cfg.model_dir is None:
         model_dir = 'models/{}'.format(cfg.arch.lower())
     else:
         model_dir = cfg.model_dir
-
     models = {}
     flag = False
     if cfg.method == 'noise_scale':
@@ -115,7 +114,6 @@ def load_models(cfg):
             model_path = os.path.join(model_dir, model_name)
         models['noise'] = srcnn.archs[cfg.arch](ch)
         chainer.serializers.load_npz(model_path, models['noise'])
-
     if cfg.gpu >= 0:
         chainer.backends.cuda.check_cuda_available()
         chainer.backends.cuda.get_device(cfg.gpu).use()
@@ -152,17 +150,13 @@ def main():
     g.add_argument('--height', '-H', type=int, default=0)
     g.add_argument('--shorter_side', '-S', type=int, default=0)
     g.add_argument('--longer_side', '-L', type=int, default=0)
-
     args = p.parse_args()
     if args.arch in srcnn.table:
         args.arch = srcnn.table[args.arch]
-
     models = load_models(args)
-
     input_exts = ['.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff', '.webp']
     output_exts = ['.png', '.webp']
     outext = '.' + args.extension
-
     outname = None
     outdir = args.output
     if os.path.isdir(args.input):
@@ -177,10 +171,8 @@ def main():
         elif tmpext != '':
             raise ValueError('Format {} is not supported'.format(tmpext))
         filelist = [args.input]
-
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-
     for path in filelist:
         tmpname, tmpext = os.path.splitext(os.path.basename(path))
         if outname is None or len(filelist) > 1:
@@ -203,7 +195,6 @@ def main():
                     args.scale_ratio = args.longer_side / w
                 else:
                     args.scale_ratio = args.longer_side / h
-
             dst = src.copy()
             start = time.time()
             outname += '_(tta{})'.format(args.tta_level) if args.tta else '_'
@@ -220,11 +211,9 @@ def main():
                     outname += '(scale{:.1f}x)'.format(args.scale_ratio)
                     dst = upscale_image(args, dst, models['scale'])
             print('Elapsed time: {:.6f} sec'.format(time.time() - start))
-
             outname += '({}_{}){}'.format(args.arch, args.color, outext)
             if os.path.exists(outpath):
                 outpath = os.path.join(outdir, outname)
-
             lossless = args.quality is None
             quality = 100 if lossless else args.quality
             icc_profile = src.info.get('icc_profile')
@@ -233,7 +222,5 @@ def main():
                 outpath, quality=quality, lossless=lossless,
                 icc_profile=icc_profile)
             six.print_('Saved as \'{}\''.format(outpath))
-
-
 if __name__ == '__main__':
     main()
