@@ -5,29 +5,28 @@ import chainer
 import chainer.links as L
 import numpy as np
 from PIL import Image
+from functools import lru_cache as cache;
+from methodtools import lru_cache as class_cache;
 
 try:
     import wand.image
 except ImportError:
     pass
 
-
+@cache(mazsize=40)
 def alpha_make_border(rgb, alpha, model):
     xp = model.xp
     sum2d = L.Convolution2D(1, 1, 3, 1, 1, nobias=True, initialW=1)
     if xp == chainer.backends.cuda.cupy:
         sum2d.to_gpu()
-
     mask = xp.array(alpha, dtype=xp.float32)
     mask[mask > 0] = 1
     mask_nega = xp.abs(mask - 1).astype(xp.uint8) == 1
     eps = 1.0e-7
-
     rgb = xp.array(rgb, dtype=xp.float32).transpose(2, 0, 1)
     rgb[0][mask_nega] = 0
     rgb[1][mask_nega] = 0
     rgb[2][mask_nega] = 0
-
     with chainer.no_backprop_mode():
         for _ in range(model.offset):
             mask_weight = sum2d(mask[xp.newaxis, xp.newaxis, :, :]).data[0, 0]
@@ -41,7 +40,7 @@ def alpha_make_border(rgb, alpha, model):
     rgb = chainer.backends.cuda.to_cpu(xp.clip(rgb, 0, 255))
     return Image.fromarray(rgb.transpose(1, 2, 0).astype(np.uint8))
 
-
+@cache(mazsize=40)
 def read_image_rgb_uint8(path):
     src = Image.open(path)
     if src.mode in ('L', 'RGB', 'P'):
@@ -58,7 +57,7 @@ def read_image_rgb_uint8(path):
     dst = np.array(rgb, dtype=np.uint8)
     return dst
 
-
+@cache(mazsize=40)
 def array_to_wand(src):
     assert isinstance(src, np.ndarray)
     with io.BytesIO() as buf:
@@ -67,7 +66,7 @@ def array_to_wand(src):
         dst = wand.image.Image(blob=buf.getvalue())
     return dst
 
-
+@cache(mazsize=40)
 def wand_to_array(src):
     assert isinstance(src, wand.image.Image)
     with io.BytesIO(src.make_blob('PNG')) as buf:
@@ -75,11 +74,10 @@ def wand_to_array(src):
         dst = np.array(tmp, dtype=np.uint8)
     return dst
 
-
+@cache(mazsize=40)
 def nn_scaling(src, ratio):
     if src is None:
         return None
-
     if isinstance(src, Image.Image):
         w, h = src.size[:2]
         dst = src.resize((int(w * ratio), int(h * ratio)), Image.NEAREST)
@@ -92,20 +90,20 @@ def nn_scaling(src, ratio):
         raise ValueError('Unknown image type')
     return dst
 
-
+@cache(mazsize=40)
 def jpeg(src, sampling_factor='1x1,1x1,1x1', quality=90):
     src.format = 'jpg'
     src.compression_quality = quality
     src.options['jpeg:sampling-factor'] = sampling_factor
     return wand.image.Image(blob=src.make_blob())
 
-
+@cache(mazsize=40)
 def pcacov(x):
     imcol = x.reshape(3, x.shape[0] * x.shape[1])
     ce, cv = np.linalg.eigh(np.cov(imcol))
     return ce, cv
 
-
+@cache(mazsize=40)
 def clipped_psnr(y, t, a_min=0., a_max=1.):
     xp = chainer.backends.cuda.get_array_module(y)
     y_c = xp.clip(y, a_min, a_max)
