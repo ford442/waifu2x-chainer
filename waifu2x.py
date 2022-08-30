@@ -13,7 +13,7 @@ from lib import utils
 from functools import lru_cache as cache;
 from methodtools import lru_cache as class_cache;
 
-class waifu():
+#class waifu():
     
 
 
