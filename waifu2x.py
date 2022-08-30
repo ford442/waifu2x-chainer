@@ -13,6 +13,10 @@ from lib import utils
 from functools import lru_cache as cache;
 from methodtools import lru_cache as class_cache;
 
+class waifu():
+    
+
+
 #@lru_cache(maxsize=40)
 def denoise_image(cfg, src, model):
     dst, alpha=split_alpha(src, model)
