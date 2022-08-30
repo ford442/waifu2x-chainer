@@ -1,27 +1,21 @@
 from __future__ import print_function
 import os
 import random
-
 import numpy as np
 
-
 class Namespace(object):
-
     def __init__(self, kwargs):
         self.kwargs = kwargs
         for key in kwargs.keys():
             setattr(self, key, kwargs[key])
-
     def __repr__(self):
         str = []
         for key in self.kwargs.keys():
             str.append('{}={}'.format(key, self.kwargs[key]))
         return ', '.join(str)
-
     def append(self, key, value):
         self.kwargs[key] = value
         setattr(self, key, value)
-
 
 def get_config(base, model, train=True):
     ch = model.ch
@@ -29,7 +23,6 @@ def get_config(base, model, train=True):
     inner_scale = model.inner_scale
     crop_size = base.out_size + offset * 2
     in_size = crop_size // inner_scale
-
     if train:
         max_size = base.max_size
         patches = base.patches
@@ -37,7 +30,6 @@ def get_config(base, model, train=True):
         max_size = 0
         coeff = (1 - base.validation_rate) / base.validation_rate
         patches = int(round(base.validation_crop_rate * coeff * base.patches))
-
     config = {
         'ch': ch,
         'method': base.method,
@@ -62,14 +54,12 @@ def get_config(base, model, train=True):
     }
     return Namespace(config)
 
-
 def set_random_seed(seed, gpu=-1):
     random.seed(seed)
     np.random.seed(seed)
     if gpu >= 0:
         import cupy
         cupy.random.seed(seed)
-
 
 def load_filelist(dir, shuffle=False):
     files = os.listdir(dir)
