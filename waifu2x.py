@@ -14,8 +14,6 @@ from functools import lru_cache as cache;
 from methodtools import lru_cache as class_cache;
 
 #class waifu():
-    
-
 
 #@lru_cache(maxsize=40)
 def denoise_image(cfg, src, model):
@@ -205,9 +203,9 @@ def main():
                     outname += ''.format(args.scale_ratio)
                     dst=upscale_image(args, dst, models['scale'])
             print('Elapsed time: {:.6f} sec'.format(time.time() - start))
-                print('==============')
-                print('|| SR FRAME ||')
-                print('==============')
+            print('==============')
+            print('|| SR FRAME ||')
+            print('==============')
             outname += ''.format(args.arch, args.color, outext)
             if os.path.exists(outpath):
                 outpath=os.path.join(outdir, outname)
