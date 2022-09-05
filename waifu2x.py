@@ -10,12 +10,9 @@ from lib import iproc
 from lib import reconstruct
 from lib import srcnn
 from lib import utils
-from functools import lru_cache as cache;
-from methodtools import lru_cache as class_cache;
 
 #class waifu():
 
-#@lru_cache(maxsize=40)
 def denoise_image(cfg, src, model):
     dst, alpha=split_alpha(src, model)
     six.print_('Level {} denoising...'.format(cfg.noise_level),end=' ', flush=True)
@@ -62,7 +59,6 @@ def upscale_image(cfg, src, scale_model, alpha_model=None):
         dst.putalpha(alpha)
     return dst
 
-@cache(maxsize=40)
 def split_alpha(src, model):
     alpha=None
     if src.mode in ('L', 'RGB', 'P'):
