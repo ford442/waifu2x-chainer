@@ -10,6 +10,7 @@ from lib import iproc
 from lib import reconstruct
 from lib import srcnn
 from lib import utils
+from IPython.display import clear_output
 
 #class waifu():
 
@@ -197,6 +198,7 @@ def main():
                 if 'scale' in models:
                     outname += ''.format(args.scale_ratio)
                     dst=upscale_image(args, dst, models['scale'])
+            clear_output();        
             print('Elapsed time: {:.6f} sec'.format(time.time() - start))
             print('==============')
             print('|| SR FRAME ||')
@@ -205,7 +207,7 @@ def main():
             if os.path.exists(outpath):
                 outpath=os.path.join(outdir, outname)
             lossless=args.quality is None
-            quality=100 if lossless else args.quality
+            quality=100
             icc_profile=src.info.get('icc_profile')
             icc_profile="" if icc_profile is None else icc_profile
             dst.convert(src.mode).save(
