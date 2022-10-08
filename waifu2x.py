@@ -109,11 +109,11 @@ def load_models(cfg):
             model_path=os.path.join(model_dir, model_name)
         models['noise']=srcnn.archs[cfg.arch](ch)
         chainer.serializers.load_npz(model_path, models['noise'])
-    if cfg.gpu >= 0:
-        chainer.backends.cuda.check_cuda_available()
-        chainer.backends.cuda.get_device(cfg.gpu).use()
-    for _, model in models.items():
-        model.to_gpu()
+    #if cfg.gpu >= 0:
+     #   chainer.backends.cuda.check_cuda_available()
+    #    chainer.backends.cuda.get_device(cfg.gpu).use()
+   # for _, model in models.items():
+    #    model.to_gpu()
     return models
 
 def main():
